@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.gymTech.model.Aluno;
+import com.gymTech.model.AlunoLogin;
 import com.gymTech.repository.AlunoRepository;
 import com.gymTech.service.AlunoService;
 
@@ -35,22 +36,11 @@ public class AlunoController {
 	@Autowired
 	private AlunoRepository alunoRepository;
 
-	/**
-	 * Retorna todos os alunos. Calcula e atualiza o IMC de cada aluno antes de
-	 * retornar a lista.
-	 */
 	@GetMapping("/all")
-	public ResponseEntity<List<Aluno>> getAll() {
-		List<Aluno> alunos = alunoRepository.findAll();
-
-		if (alunos.isEmpty()) {
-			return ResponseEntity.noContent().build();
-		}
-
-		// Atualiza o IMC e a categoria para cada aluno antes de retornar
-		alunos.forEach(aluno -> alunoService.calcularImc(aluno.getId()));
-
-		return ResponseEntity.ok(alunos);
+	public ResponseEntity <List<Aluno>> getAll(){
+		
+		return ResponseEntity.ok(alunoRepository.findAll());
+		
 	}
 
 	/**
@@ -64,23 +54,7 @@ public class AlunoController {
 			return ResponseEntity.ok(aluno);
 		}).orElse(ResponseEntity.notFound().build());
 	}
-
-	/**
-	 * Retorna uma lista de alunos cujo nome contém o termo especificado (ignora
-	 * maiúsculas/minúsculas).
-	 */
-	@GetMapping("/nome/{nome}")
-	public ResponseEntity<List<Aluno>> getByNome(@PathVariable String nome) {
-		List<Aluno> alunos = alunoRepository.findAllByNomeContainingIgnoreCase(nome);
-
-		if (alunos.isEmpty()) {
-			return ResponseEntity.noContent().build();
-		}
-
-		return ResponseEntity.ok(alunos);
-	}
 	
-
 	/**
 	 * Calcula e retorna o IMC e a categoria de um aluno pelo ID.
 	 */
@@ -90,36 +64,35 @@ public class AlunoController {
 				.orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
 	}
 
-	/**
-	 * Cria um novo aluno.
-	 */
-	@PostMapping
-	public ResponseEntity<Aluno> post(@Valid @RequestBody Aluno aluno) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(alunoRepository.save(aluno));
+	
+	@PostMapping("/logar")
+	public ResponseEntity<AlunoLogin> autenticarUsuario(@RequestBody Optional<AlunoLogin> usuarioLogin){
+		
+		return alunoService.autenticarUsuario(usuarioLogin)
+				.map(resposta -> ResponseEntity.status(HttpStatus.OK).body(resposta))
+				.orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+	}
+    
+
+	@PostMapping("/cadastrar")
+	public ResponseEntity<Aluno> postUsuario(@RequestBody @Valid Aluno aluno) {
+
+		return alunoService.cadastrarUsuario(aluno)
+			.map(resposta -> ResponseEntity.status(HttpStatus.CREATED).body(resposta))
+			.orElse(ResponseEntity.status(HttpStatus.BAD_REQUEST).build());
+
 	}
 
-	/**
-	 * Atualiza os dados de um aluno existente.
-	 */
-	@PutMapping
-	public ResponseEntity<Aluno> put(@Valid @RequestBody Aluno aluno) {
-		return alunoRepository.findById(aluno.getId())
-				.map(resposta -> ResponseEntity.status(HttpStatus.OK).body(alunoRepository.save(aluno)))
-				.orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+	@PutMapping("/atualizar")
+	public ResponseEntity<Aluno> putUsuario(@Valid @RequestBody Aluno aluno) {
+		
+		return alunoService.atualizarUsuario(aluno)
+			.map(resposta -> ResponseEntity.status(HttpStatus.OK).body(resposta))
+			.orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+		
 	}
 
-	/**
-	 * Deleta um aluno pelo ID.
-	 */
-	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@DeleteMapping("/{id}")
-	public void delete(@PathVariable Long id) {
-		Optional<Aluno> aluno = alunoRepository.findById(id);
 
-		if (aluno.isEmpty()) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-		}
 
-		alunoRepository.deleteById(id);
-	}
+
 }
