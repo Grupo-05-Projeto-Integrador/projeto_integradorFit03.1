@@ -1,5 +1,4 @@
 package com.gymTech.service;
-
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,9 @@ public class AlunoService {
 
     @Autowired
     private AlunoRepository alunoRepository;
+    
   
+    
 
     public Optional<Aluno> calcularImc(Long id) {
         return alunoRepository.findById(id).map(aluno -> {
@@ -43,6 +44,7 @@ public class AlunoService {
             return "Obesidade grau 3";
         }
     }
+    }
 
    
-}
+

@@ -14,5 +14,7 @@ public interface AlunoRepository extends JpaRepository<Aluno, Long> {
 	
 	public List <Aluno> findAllByNomeContainingIgnoreCase(@Param("nome") String nome);
 
+	public Optional<Aluno> findByUsuario(String userName);
+
 	
 }
